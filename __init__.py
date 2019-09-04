@@ -18,11 +18,9 @@ def _get_parser():
 def main():
 	parser = _get_parser()
 	args = parser.parse_args()
-	posts = scraper.profile_recent_posts(args.url)
 
-	post_data = []
-	for p in posts:
-		post_data.append(scraper.minimise_post(p))
+	profile = scraper.profile(args.url)
+	print(profile)
 
 
 main()

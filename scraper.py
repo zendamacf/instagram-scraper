@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 def _send_request(url):
 	response = requests.get(url)
+	response.raise_for_status()
 	return response.text
 
 
@@ -16,8 +17,9 @@ def _extract_json(html):
 	return json.loads(raw_string)
 
 
-def minimise_post(post):
+def _minimise_post(post):
 	min_post = {
+		'id': post['id'],
 		'post_url': 'https://www.instagram.com/p/{}/'.format(post['shortcode']),
 		'image_url': None,
 		'caption': post['edge_media_to_caption']['edges'][0]['node']['text'],
@@ -33,15 +35,39 @@ def minimise_post(post):
 	return min_post
 
 
-def profile_recent_posts(url):
+def _profile_recent_posts(user):
 	posts = []
-	response = _send_request(url)
-	data = _extract_json(response)
-	nodes = data['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['edges']
+	nodes = user['edge_owner_to_timeline_media']['edges']
 
 	for n in nodes:
 		node = n.get('node')
 		if node and isinstance(node, dict):
-			posts.append(node)
+			posts.append(_minimise_post(node))
 
 	return posts
+
+
+def _minimise_profile(user):
+	profile_data = {
+		'id': user['id'],
+		'username': user['username'],
+		'full_name': user['full_name'],
+		'biography': user['biography'],
+		'profile_url': 'https://www.instagram.com/{}/'.format(user['username']),
+		'image_url': user['profile_pic_url_hd'],
+		'follower_count': user['edge_followed_by']['count'],
+		'follow_count': user['edge_follow']['count'],
+		'post_count': user['edge_owner_to_timeline_media']['count'],
+		'recent_posts': _profile_recent_posts(user)
+	}
+	return profile_data
+
+
+def profile(url):
+	response = _send_request(url)
+	json_data = _extract_json(response)
+
+	user = json_data['entry_data']['ProfilePage'][0]['graphql']['user']
+	profile_data = _minimise_profile(user)
+
+	return profile_data
