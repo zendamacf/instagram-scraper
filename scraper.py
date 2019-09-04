@@ -16,6 +16,23 @@ def _extract_json(html):
 	return json.loads(raw_string)
 
 
+def minimise_post(post):
+	min_post = {
+		'post_url': 'https://www.instagram.com/p/{}/'.format(post['shortcode']),
+		'image_url': None,
+		'caption': post['edge_media_to_caption']['edges'][0]['node']['text'],
+	}
+
+	max_width = 0
+	# Find the largest thumbnail
+	for thumbnail in post['thumbnail_resources']:
+		if thumbnail['config_width'] > max_width:
+			min_post['image_url'] = thumbnail['src']
+			max_width = thumbnail['config_width']
+
+	return min_post
+
+
 def profile_recent_posts(url):
 	posts = []
 	response = _send_request(url)
