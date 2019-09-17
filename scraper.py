@@ -3,13 +3,19 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def _send_request(url):
+def _send_request(url: str) -> str:
+	"""
+	Fetches HTML page from Instagram profile.
+	"""
 	response = requests.get(url)
 	response.raise_for_status()
 	return response.text
 
 
-def _extract_json(html):
+def _extract_json(html: str) -> dict:
+	"""
+	Extracts JSON dict from HTML page string.
+	"""
 	soup = BeautifulSoup(html, 'html.parser')
 	body = soup.find('body')
 	script_tag = body.find('script')
@@ -17,7 +23,10 @@ def _extract_json(html):
 	return json.loads(raw_string)
 
 
-def _minimise_post(post):
+def _minimise_post(post: dict) -> dict:
+	"""
+	Simplifies post JSON dict into only relevant information.
+	"""
 	min_post = {
 		'id': post['id'],
 		'post_url': 'https://www.instagram.com/p/{}/'.format(post['shortcode']),
@@ -35,7 +44,10 @@ def _minimise_post(post):
 	return min_post
 
 
-def _profile_recent_posts(user):
+def _profile_recent_posts(user: dict) -> list:
+	"""
+	Gets recent posts from a Instagram JSON dict.
+	"""
 	posts = []
 	nodes = user['edge_owner_to_timeline_media']['edges']
 
@@ -47,7 +59,10 @@ def _profile_recent_posts(user):
 	return posts
 
 
-def _minimise_profile(user):
+def _minimise_profile(user: dict) -> dict:
+	"""
+	Simplifies profile JSON dict into only relevant information.
+	"""
 	profile_data = {
 		'id': user['id'],
 		'username': user['username'],
@@ -63,7 +78,10 @@ def _minimise_profile(user):
 	return profile_data
 
 
-def profile(url):
+def profile(url: str) -> dict:
+	"""
+	Fetches profile data for a given Instagram URL.
+	"""
 	response = _send_request(url)
 	json_data = _extract_json(response)
 

@@ -2,7 +2,10 @@ import argparse
 import scraper
 
 
-def _get_parser():
+def _get_parser() -> argparse.ArgumentParser:
+	"""
+	Sets up required CLI parameters.
+	"""
 	parser = argparse.ArgumentParser(
 		description='Scrape data from a Instagram profile.'
 	)
