@@ -3,13 +3,20 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def _send_request(url: str) -> str:
+class ScraperException(Exception):
+	pass
+
+
+def _send_request(url: str) -> requests.Response:
 	"""
 	Fetches HTML page from Instagram profile.
 	"""
 	response = requests.get(url)
-	response.raise_for_status()
-	return response.text
+	try:
+		response.raise_for_status()
+	except requests.exceptions.HTTPError as e:
+		raise ScraperException('Got {} from {}'.format(e.response.status_code, url)) from e
+	return response
 
 
 def _extract_json(html: str) -> dict:
@@ -78,14 +85,18 @@ def _minimise_profile(user: dict) -> dict:
 	return profile_data
 
 
+def _parse_user(json_data: dict) -> dict:
+	return json_data['entry_data']['ProfilePage'][0]['graphql']['user']
+
+
 def profile(url: str) -> dict:
 	"""
 	Fetches profile data for a given Instagram URL.
 	"""
-	response = _send_request(url)
+	response = _send_request(url).text
 	json_data = _extract_json(response)
 
-	user = json_data['entry_data']['ProfilePage'][0]['graphql']['user']
+	user = _parse_user(json_data)
 	profile_data = _minimise_profile(user)
 
 	return profile_data
