@@ -15,7 +15,8 @@ def _send_request(url: str) -> requests.Response:
 	try:
 		response.raise_for_status()
 	except requests.exceptions.HTTPError as e:
-		raise ScraperException('Got {} from {}'.format(e.response.status_code, url)) from e
+		msg = 'Got {} from {}'.format(e.response.status_code, url)
+		raise ScraperException(msg) from e
 	return response
 
 
@@ -25,8 +26,8 @@ def _extract_json(html: str) -> dict:
 	"""
 	soup = BeautifulSoup(html, 'html.parser')
 	body = soup.find('body')
-	script_tag = body.find('script')
-	raw_string = script_tag.text.strip().replace('window._sharedData =', '').replace(';', '')
+	script = body.find('script').text.strip()
+	raw_string = script.replace('window._sharedData =', '').replace(';', '')
 	return json.loads(raw_string)
 
 
